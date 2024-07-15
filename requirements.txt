@@ -8,3 +8,5 @@ scikit-learn~=1.5.1
 pandas~=2.2.2
 pynput~=1.7.7
 pyautogui==0.9.54
+imageio~=2.34.2
+gdown~=5.2.0
