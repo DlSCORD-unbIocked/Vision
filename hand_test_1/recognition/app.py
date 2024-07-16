@@ -229,27 +229,6 @@ def main():
     cv.destroyAllWindows()
 
 
-def select_mode(key, mode):
-    log_count = 0
-    if 48 <= key <= 57:  # 0 ~ 9
-        number = key - 48
-    else:
-        number = -1
-    if key == 110:  # n
-        mode = 0
-    if key == 107:  # k
-        mode = 1
-    if key == 104:  # h
-        mode = 2
-    if key == 116:  # t
-        mode = 3
-    if number > -1 and mode == 3:
-        log_count = get_input("Enter the frames to log")
-        print(log_count)
-
-    return number, mode, log_count
-
-
 def calc_bounding_rect(image, landmarks):
     image_width, image_height = image.shape[1], image.shape[0]
 
@@ -266,6 +245,34 @@ def calc_bounding_rect(image, landmarks):
     x, y, w, h = cv.boundingRect(landmark_array)
 
     return [x, y, x + w, y + h]
+
+
+def select_mode(key, mode):
+    log_count = 0
+    if 48 <= key <= 57:  # 0 ~ 9
+        number = key - 48
+    else:
+        number = -1
+    if key == 110:  # n
+        mode = 0
+    if key == 107:  # k
+        mode = 1
+    if key == 104:  # h
+        mode = 2
+    if key == 116:  # t
+        mode = 3
+    if number > -1 and mode == 3:
+        log_count = get_input("Enter the frames to log")
+
+    return number, mode, log_count
+
+
+def get_finger_proximity(landmark_list):
+    for index, landmark in enumerate(landmark_list):
+        if index == 0:
+            base_x, base_y = landmark[0], landmark[1]
+        landmark_list[index][0] = landmark[0] - base_x
+        landmark_list[index][1] = landmark[1] - base_y
 
 
 def calc_landmark_list(image, landmarks):
