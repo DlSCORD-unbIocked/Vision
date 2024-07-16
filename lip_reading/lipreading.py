@@ -6,6 +6,18 @@ import tensorflow_io as tfio
 from g2p_en import G2p
 import os
 
+
+'''
+@inproceedings{peplinski21_interspeech,
+  author={Jacob Peplinski and Joel Shor and Sachin Joglekar and Jake Garrison and Shwetak Patel},
+  title={{FRILL: A Non-Semantic Speech Embedding for Mobile Devices}},
+  year=2021,
+  booktitle={Proc. Interspeech 2021},
+  pages={1204--1208},
+  doi={10.21437/Interspeech.2021-2070}
+}
+}'''
+
 #y = audio signal (numpy array) and sr = sample rate
 
 current_dir = os.getcwd()
