@@ -174,7 +174,7 @@ def main():
                     else:
                         point_history.append([0, 0])
 
-                    if hand_sign_id == 0 and not mouse_down:  # Click gesture
+                    if hand_sign_id == 6 and not mouse_down:  # Click gesture
                         mouse.click(Button.left, 1)
                         mouse_down = True
                     elif hand_sign_id == 1:  # Open or Close gesture
