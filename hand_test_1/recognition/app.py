@@ -6,7 +6,7 @@ import argparse
 import itertools
 from collections import Counter
 from collections import deque
-from pynput.mouse import Button, Controller
+from movement import click, move_to_segment, mouse_up, mouse_press
 from guihelper import show_info, get_input
 import cv2 as cv
 import numpy as np
@@ -46,7 +46,8 @@ def get_args():
 def main():
     # Argument parsing #################################################################
     args = get_args()
-    mouse = Controller()
+    color = (152, 251, 152)
+    threshold = 40
     cap_device = args.device
     cap_width = args.width
     cap_height = args.height
@@ -57,7 +58,6 @@ def main():
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
     min_tracking_confidence = args.min_tracking_confidence
-
     use_brect = True
 
     # Camera preparation ###############################################################
@@ -158,40 +158,50 @@ def main():
 
                 # Hand sign classification
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-                # if hand_sign_id == 3:  # OK gesture
-                #     print("OK symbol detected")
-                #     run = False
+                # Open✋: 0, Close👊: 1, Pointer☝️: 2, Ok👌: 3, Thumbs up👍: 4, Coyote🤘: 5
                 if not training:
-                    if hand_sign_id == 4:
+                    if hand_sign_id == 3:
                         run = False
                         print("thumbs up, closing...")
                     else:
-                        get_thumb_pointer_proximity(landmark_list)
-                        if hand_sign_id == 2:  # Point gesture
-                            point_history.append(landmark_list[8])
-                            mouse.position = (
-                                int(landmark_list[8][0]),
-                                int(landmark_list[8][1]),
-                            )
-                            if mouse_down:
-                                mouse.release(Button.left)
-                                mouse_down = False
-                        else:
-                            point_history.append([0, 0])
+                        # Original method
+                        # get_thumb_pointer_proximity(landmark_list)
+                        # if hand_sign_id == 2:
+                        #     point_history.append(landmark_list[8])
+                        #     move_to_segment(8, landmark_list)
+                        #     if mouse_down:
+                        #         mouse_up()
+                        #         mouse_down = False
+                        # else:
+                        #     point_history.append([0, 0])
 
-                        if hand_sign_id == 6 and not mouse_down:  # Click gesture
-                            mouse.click(Button.left, 1)
-                            mouse_down = True
-                        elif hand_sign_id == 1:  # Open or Close gesture
+                        # if hand_sign_id == 5 and not mouse_down:
 
-                            if mouse_down == False:
-                                mouse.press(Button.left)
+                        #     click()
+                        #     mouse_down = True
+                        # elif hand_sign_id == 1:
+
+                        #     if mouse_down == False:
+                        #         click()
+                        #         mouse_down = True
+
+                        #     move_to_segment(8, landmark_list)
+                        # Different implementation
+                        color = (152, 251, 152)
+                        # multiplier based on size of bounding rectangle variable brect
+
+                        if get_thumb_pointer_proximity(landmark_list) < threshold:
+                            color = (0, 0, 255)
+                            if not mouse_down:
+
+                                mouse_press()
                                 mouse_down = True
 
-                            mouse.position = (
-                                int(landmark_list[8][0]),
-                                int(landmark_list[8][1]),
-                            )
+                        elif mouse_down:
+                            mouse_up()
+                            mouse_down = False
+                        move_to_segment(4, landmark_list)
+                        point_history.append(landmark_list[4])
 
                 # Finger gesture classification
                 finger_gesture_id = 0
@@ -218,7 +228,7 @@ def main():
         else:
             point_history.append([0, 0])
 
-        debug_image = draw_point_history(debug_image, point_history)
+        debug_image = draw_point_history(debug_image, point_history, color)
         debug_image = draw_info(debug_image, fps, mode, number)
 
         # Screen reflection #############################################################
@@ -276,8 +286,7 @@ def get_thumb_pointer_proximity(landmark_list):
     thumb_tip = landmark_list[4]
     index_finger_tip = landmark_list[8]
 
-    if abs(thumb_tip[1] - index_finger_tip[1]) < 5:
-        print("Thumb and index finger are close")
+    return abs(thumb_tip[1] - index_finger_tip[1])
 
 
 def calc_landmark_list(image, landmarks):
@@ -683,16 +692,35 @@ def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text
             2,
             cv.LINE_AA,
         )
-
+    # dipslay brect coordinates with text
+    cv.putText(
+        image,
+        "x diff: " + str(abs(brect[0] - brect[2])),
+        (10, 200),
+        cv.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (255, 255, 255),
+        1,
+        cv.LINE_AA,
+    )
+    cv.putText(
+        image,
+        "y diff: " + str(abs(brect[1] - brect[3])),
+        (10, 300),
+        cv.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (255, 255, 255),
+        1,
+        cv.LINE_AA,
+    )
     return image
 
 
-def draw_point_history(image, point_history):
+def draw_point_history(image, point_history, color=(152, 251, 152)):
     for index, point in enumerate(point_history):
         if point[0] != 0 and point[1] != 0:
-            cv.circle(
-                image, (point[0], point[1]), 1 + int(index / 2), (152, 251, 152), 2
-            )
+
+            cv.circle(image, (point[0], point[1]), 1 + int(index / 2), color, 2)
 
     return image
 
