@@ -7,8 +7,7 @@ import itertools
 from collections import Counter
 from collections import deque
 from pynput.mouse import Button, Controller
-import tkinter as tk
-import tkinter.messagebox as tkMessageBox
+from guihelper import show_info, get_input
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -53,8 +52,7 @@ def main():
     cap_height = args.height
     run = True
     training = True
-    log_count = 1
-    fast_log_num = -1
+    log_count = 0
     mouse_down = False
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
@@ -117,7 +115,9 @@ def main():
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
-        number, mode, log_count = select_mode(key, mode)
+
+        if log_count == 0:
+            number, mode, log_count = select_mode(key, mode)
 
         # Camera capture #####################################################
         ret, image = cap.read()
@@ -154,7 +154,6 @@ def main():
                     mode,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list,
-                    log_count,
                 )
 
                 # Hand sign classification
@@ -222,20 +221,20 @@ def main():
         if log_count > 0:
             log_count -= 1
             if log_count == 0:
-                fast_log_num = -1
-                tkMessageBox.showinfo("Information", "Logging completed")
+                # 5170
+                mode = 0
+                show_info("Logging completed")
 
     cap.release()
     cv.destroyAllWindows()
 
 
-def select_mode(key, mode, log_count):
-    if log_count == 0:
-        number = -1
-    else:
-        number = -1
+def select_mode(key, mode):
+    log_count = 0
     if 48 <= key <= 57:  # 0 ~ 9
         number = key - 48
+    else:
+        number = -1
     if key == 110:  # n
         mode = 0
     if key == 107:  # k
@@ -244,9 +243,9 @@ def select_mode(key, mode, log_count):
         mode = 2
     if key == 116:  # t
         mode = 3
-        if number > -1:
-
-            log_count = int(tk.Entry().get())
+    if number > -1 and mode == 3:
+        log_count = get_input("Enter the frames to log")
+        print(log_count)
 
     return number, mode, log_count
 
@@ -338,7 +337,7 @@ def pre_process_point_history(image, point_history):
 def logging_csv(number, mode, landmark_list, point_history_list):
     if mode == 0:
         pass
-    if mode == 1 and (0 <= number <= 9):
+    if mode in [1, 3] and (0 <= number <= 9):
         csv_path = "model/keypoint_classifier/keypoint.csv"
         with open(csv_path, "a", newline="") as f:
             writer = csv.writer(f)
@@ -709,7 +708,7 @@ def draw_info(image, fps, mode, number):
     )
 
     mode_string = ["Logging Key Point", "Logging Point History", "Log capture X frames"]
-    if 1 <= mode <= 2:
+    if 1 <= mode <= 3:
         cv.putText(
             image,
             "MODE:" + mode_string[mode - 1],
