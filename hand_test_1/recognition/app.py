@@ -51,7 +51,7 @@ def main():
     cap_width = args.width
     cap_height = args.height
     run = True
-    training = True
+    training = False
     log_count = 0
     mouse_down = False
     use_static_image_mode = args.use_static_image_mode
@@ -162,31 +162,36 @@ def main():
                 #     print("OK symbol detected")
                 #     run = False
                 if not training:
-                    if hand_sign_id == 2:  # Point gesture
-                        point_history.append(landmark_list[8])
-                        mouse.position = (
-                            int(landmark_list[8][0]),
-                            int(landmark_list[8][1]),
-                        )
-                        if mouse_down:
-                            mouse.release(Button.left)
-                            mouse_down = False
+                    if hand_sign_id == 4:
+                        run = False
+                        print("thumbs up, closing...")
                     else:
-                        point_history.append([0, 0])
+                        get_thumb_pointer_proximity(landmark_list)
+                        if hand_sign_id == 2:  # Point gesture
+                            point_history.append(landmark_list[8])
+                            mouse.position = (
+                                int(landmark_list[8][0]),
+                                int(landmark_list[8][1]),
+                            )
+                            if mouse_down:
+                                mouse.release(Button.left)
+                                mouse_down = False
+                        else:
+                            point_history.append([0, 0])
 
-                    if hand_sign_id == 6 and not mouse_down:  # Click gesture
-                        mouse.click(Button.left, 1)
-                        mouse_down = True
-                    elif hand_sign_id == 1:  # Open or Close gesture
-
-                        if mouse_down == False:
-                            mouse.press(Button.left)
+                        if hand_sign_id == 6 and not mouse_down:  # Click gesture
+                            mouse.click(Button.left, 1)
                             mouse_down = True
+                        elif hand_sign_id == 1:  # Open or Close gesture
 
-                        mouse.position = (
-                            int(landmark_list[8][0]),
-                            int(landmark_list[8][1]),
-                        )
+                            if mouse_down == False:
+                                mouse.press(Button.left)
+                                mouse_down = True
+
+                            mouse.position = (
+                                int(landmark_list[8][0]),
+                                int(landmark_list[8][1]),
+                            )
 
                 # Finger gesture classification
                 finger_gesture_id = 0
@@ -267,12 +272,12 @@ def select_mode(key, mode):
     return number, mode, log_count
 
 
-def get_finger_proximity(landmark_list):
-    for index, landmark in enumerate(landmark_list):
-        if index == 0:
-            base_x, base_y = landmark[0], landmark[1]
-        landmark_list[index][0] = landmark[0] - base_x
-        landmark_list[index][1] = landmark[1] - base_y
+def get_thumb_pointer_proximity(landmark_list):
+    thumb_tip = landmark_list[4]
+    index_finger_tip = landmark_list[8]
+
+    if abs(thumb_tip[1] - index_finger_tip[1]) < 5:
+        print("Thumb and index finger are close")
 
 
 def calc_landmark_list(image, landmarks):
