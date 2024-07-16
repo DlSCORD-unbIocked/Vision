@@ -93,7 +93,7 @@ y_pred = np.argmax(Y_pred, axis=1)
 print_confusion_matrix(y_test, y_pred)
 
 # 推論専用のモデルとして保存
-model.save(model_save_path, include_optimizer=False)
+model.save(model_save_path)
 
 # モデルを変換(量子化)
 tflite_save_path = "model/keypoint_classifier/keypoint_classifier.tflite"

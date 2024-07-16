@@ -7,7 +7,8 @@ import itertools
 from collections import Counter
 from collections import deque
 from pynput.mouse import Button, Controller
-
+import tkinter as tk
+import tkinter.messagebox as tkMessageBox
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
@@ -52,6 +53,8 @@ def main():
     cap_height = args.height
     run = True
     training = True
+    log_count = 1
+    fast_log_num = -1
     mouse_down = False
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
@@ -114,7 +117,7 @@ def main():
         key = cv.waitKey(10)
         if key == 27:  # ESC
             break
-        number, mode = select_mode(key, mode)
+        number, mode, log_count = select_mode(key, mode)
 
         # Camera capture #####################################################
         ret, image = cap.read()
@@ -151,6 +154,7 @@ def main():
                     mode,
                     pre_processed_landmark_list,
                     pre_processed_point_history_list,
+                    log_count,
                 )
 
                 # Hand sign classification
@@ -215,13 +219,21 @@ def main():
 
         # Screen reflection #############################################################
         cv.imshow("Hand Gesture Recognition", debug_image)
+        if log_count > 0:
+            log_count -= 1
+            if log_count == 0:
+                fast_log_num = -1
+                tkMessageBox.showinfo("Information", "Logging completed")
 
     cap.release()
     cv.destroyAllWindows()
 
 
-def select_mode(key, mode):
-    number = -1
+def select_mode(key, mode, log_count):
+    if log_count == 0:
+        number = -1
+    else:
+        number = -1
     if 48 <= key <= 57:  # 0 ~ 9
         number = key - 48
     if key == 110:  # n
@@ -230,7 +242,13 @@ def select_mode(key, mode):
         mode = 1
     if key == 104:  # h
         mode = 2
-    return number, mode
+    if key == 116:  # t
+        mode = 3
+        if number > -1:
+
+            log_count = int(tk.Entry().get())
+
+    return number, mode, log_count
 
 
 def calc_bounding_rect(image, landmarks):
@@ -690,7 +708,7 @@ def draw_info(image, fps, mode, number):
         cv.LINE_AA,
     )
 
-    mode_string = ["Logging Key Point", "Logging Point History"]
+    mode_string = ["Logging Key Point", "Logging Point History", "Log capture X frames"]
     if 1 <= mode <= 2:
         cv.putText(
             image,
