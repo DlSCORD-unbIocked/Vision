@@ -51,6 +51,7 @@ def main():
     cap_width = args.width
     cap_height = args.height
     run = True
+    training = True
     mouse_down = False
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
@@ -157,31 +158,32 @@ def main():
                 # if hand_sign_id == 3:  # OK gesture
                 #     print("OK symbol detected")
                 #     run = False
-                if hand_sign_id == 2:  # Point gesture
-                    point_history.append(landmark_list[8])
-                    mouse.position = (
-                        int(landmark_list[8][0]),
-                        int(landmark_list[8][1]),
-                    )
-                    if mouse_down:
-                        mouse.release(Button.left)
-                        mouse_down = False
-                else:
-                    point_history.append([0, 0])
+                if not training:
+                    if hand_sign_id == 2:  # Point gesture
+                        point_history.append(landmark_list[8])
+                        mouse.position = (
+                            int(landmark_list[8][0]),
+                            int(landmark_list[8][1]),
+                        )
+                        if mouse_down:
+                            mouse.release(Button.left)
+                            mouse_down = False
+                    else:
+                        point_history.append([0, 0])
 
-                if hand_sign_id == 0 and not mouse_down:  # Click gesture
-                    mouse.click(Button.left, 1)
-                    mouse_down = True
-                elif hand_sign_id == 1:  # Open or Close gesture
-
-                    if mouse_down == False:
-                        mouse.press(Button.left)
+                    if hand_sign_id == 0 and not mouse_down:  # Click gesture
+                        mouse.click(Button.left, 1)
                         mouse_down = True
+                    elif hand_sign_id == 1:  # Open or Close gesture
 
-                    mouse.position = (
-                        int(landmark_list[8][0]),
-                        int(landmark_list[8][1]),
-                    )
+                        if mouse_down == False:
+                            mouse.press(Button.left)
+                            mouse_down = True
+
+                        mouse.position = (
+                            int(landmark_list[8][0]),
+                            int(landmark_list[8][1]),
+                        )
 
                 # Finger gesture classification
                 finger_gesture_id = 0
