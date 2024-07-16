@@ -10,3 +10,5 @@
 `pip install requirements.txt`
 
 `python main.py`
+
+`python 3.10`
