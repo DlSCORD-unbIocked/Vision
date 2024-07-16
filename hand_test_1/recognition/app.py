@@ -6,12 +6,13 @@ import argparse
 import itertools
 from collections import Counter
 from collections import deque
+from math import sqrt
 from movement import click, move_to_segment, mouse_up, mouse_press
 from guihelper import show_info, get_input
 import cv2 as cv
 import numpy as np
 import mediapipe as mp
-
+from cameras import Camera
 from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
@@ -59,14 +60,15 @@ def main():
     min_detection_confidence = args.min_detection_confidence
     min_tracking_confidence = args.min_tracking_confidence
     use_brect = True
-
+    move = True
+    consecutive_hold_frame = 0
     # Camera preparation ###############################################################
 
-    cap = cv.VideoCapture(cap_device, cv.CAP_DSHOW)
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
-    cap.set(cv.CAP_PROP_FPS, 30)
-
+    # cap = cv.VideoCapture(cap_device, cv.CAP_DSHOW)
+    # cap.set(cv.CAP_PROP_FRAME_WIDTH, cap_width)
+    # cap.set(cv.CAP_PROP_FRAME_HEIGHT, cap_height)
+    # cap.set(cv.CAP_PROP_FPS, 30)
+    cap = Camera(cap_device, cap_width, cap_height, cv.CAP_DSHOW)
     # Model load #############################################################
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(
@@ -160,7 +162,7 @@ def main():
                 hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
                 # Open✋: 0, Close👊: 1, Pointer☝️: 2, Ok👌: 3, Thumbs up👍: 4, Coyote🤘: 5
                 if not training:
-                    if hand_sign_id == 3:
+                    if hand_sign_id == 9:
                         run = False
                         print("thumbs up, closing...")
                     else:
@@ -188,20 +190,45 @@ def main():
                         #     move_to_segment(8, landmark_list)
                         # Different implementation
                         color = (152, 251, 152)
+                        proximity = get_thumb_pointer_proximity(landmark_list)
+                        cv.putText(
+                            debug_image,
+                            str(int(proximity)),
+                            (10, 600),
+                            cv.FONT_HERSHEY_SIMPLEX,
+                            1,
+                            (0, 0, 0),
+                            2,
+                            cv.LINE_AA,
+                        )
                         # multiplier based on size of bounding rectangle variable brect
 
-                        if get_thumb_pointer_proximity(landmark_list) < threshold:
+                        if (
+                            proximity
+                            * (190 / max((brect[3] - brect[1], brect[2] - brect[0])))
+                            < threshold
+                        ):
+                            consecutive_hold_frame += 1
                             color = (0, 0, 255)
+                            # or use click() to not drag
+
                             if not mouse_down:
 
                                 mouse_press()
                                 mouse_down = True
+                                move = False
+
+                            if consecutive_hold_frame > 30:
+                                move = True
 
                         elif mouse_down:
+                            consecutive_hold_frame = 0
                             mouse_up()
                             mouse_down = False
-                        move_to_segment(4, landmark_list)
-                        point_history.append(landmark_list[4])
+                            move = True
+                        if move:
+                            move_to_segment(4, landmark_list)
+                            point_history.append(landmark_list[4])
 
                 # Finger gesture classification
                 finger_gesture_id = 0
@@ -285,8 +312,13 @@ def select_mode(key, mode):
 def get_thumb_pointer_proximity(landmark_list):
     thumb_tip = landmark_list[4]
     index_finger_tip = landmark_list[8]
+    # distance between two points
+    distance = sqrt(
+        (thumb_tip[0] - index_finger_tip[0]) ** 2
+        + (thumb_tip[1] - index_finger_tip[1]) ** 2
+    )
 
-    return abs(thumb_tip[1] - index_finger_tip[1])
+    return distance
 
 
 def calc_landmark_list(image, landmarks):
@@ -695,7 +727,7 @@ def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text
     # dipslay brect coordinates with text
     cv.putText(
         image,
-        "x diff: " + str(abs(brect[0] - brect[2])),
+        "x diff: " + str(brect[2] - brect[0]),
         (10, 200),
         cv.FONT_HERSHEY_SIMPLEX,
         0.6,
@@ -705,7 +737,7 @@ def draw_info_text(image, brect, handedness, hand_sign_text, finger_gesture_text
     )
     cv.putText(
         image,
-        "y diff: " + str(abs(brect[1] - brect[3])),
+        "y diff: " + str(brect[3] - brect[1]),
         (10, 300),
         cv.FONT_HERSHEY_SIMPLEX,
         0.6,
