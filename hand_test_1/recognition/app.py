@@ -18,6 +18,7 @@ from model import KeyPointClassifier
 from model import PointHistoryClassifier
 
 
+
 def get_args():
     parser = argparse.ArgumentParser()
 
@@ -144,6 +145,7 @@ def main():
                 brect = calc_bounding_rect(debug_image, hand_landmarks)
                 # Landmark calculation
                 landmark_list = calc_landmark_list(debug_image, hand_landmarks)
+
 
                 # Conversion to relative coordinates / normalized coordinates
                 pre_processed_landmark_list = pre_process_landmark(landmark_list)
@@ -303,7 +305,9 @@ def select_mode(key, mode):
         mode = 2
     if key == 116:  # t
         mode = 3
-    if number > -1 and mode == 3:
+    if key == 117:  # u
+        mode = 4
+    if number > -1 and mode in [3, 4]:
         log_count = get_input("Enter the frames to log")
 
     return number, mode, log_count
@@ -395,7 +399,7 @@ def logging_csv(number, mode, landmark_list, point_history_list):
         with open(csv_path, "a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *landmark_list])
-    if mode == 2 and (0 <= number <= 9):
+    if mode in [2, 4] and (0 <= number <= 9):
         csv_path = "model/point_history_classifier/point_history.csv"
         with open(csv_path, "a", newline="") as f:
             writer = csv.writer(f)
@@ -779,8 +783,13 @@ def draw_info(image, fps, mode, number):
         cv.LINE_AA,
     )
 
-    mode_string = ["Logging Key Point", "Logging Point History", "Log capture X frames"]
-    if 1 <= mode <= 3:
+    mode_string = [
+                    "Logging Key Point",
+                    "Logging Point History",
+                    "Log capture X key points",
+                    "Log capture X point histories"
+    ]
+    if 1 <= mode <= 4:
         cv.putText(
             image,
             "MODE:" + mode_string[mode - 1],
