@@ -8,6 +8,8 @@
 - [ ] Documentation
 - [ ] Create a GUI
 - [ ] Multi-Language support
+- [ ] Lip-Reading support
+- [ ] Training for Lip-Reading support
 
 ## Use:
 
