@@ -7,6 +7,7 @@ import speech_recognition as sr
 import pyaudio
 import threading
 import json
+from search import search_web, search_wikipedia, search_news, search_youtube
 
 keyboard = Controller()
 r = sr.Recognizer()
@@ -65,12 +66,21 @@ def query():
 
 
 def process_query():
-    queried_text = query()
+    queried_text = query().lower()
     print(queried_text)
     if queried_text not in ["Could not understand audio", "Could not request results"]:
         if "hotkey" in queried_text:
 
             press_hotkey([x for x in queried_text.replace("hotkey", " ").split()])
+        elif queried_text.startswith("wiki"):
+            search_wikipedia(queried_text.replace("wikipedia", ""))
+        elif queried_text.startswith("search"):
+            search_web(queried_text.replace("search", ""))
+        elif queried_text.startswith("news"):
+            search_news(queried_text.replace("news", ""))
+        elif queried_text.startswith("search youtube"):
+            search_youtube(queried_text.replace("search youtube", "")
+        elif queried_text.startswith("play youtube"):
 
         else:
             write_line(queried_text)
