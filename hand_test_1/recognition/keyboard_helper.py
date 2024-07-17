@@ -6,16 +6,21 @@ from pynput.keyboard import Key, Controller
 import speech_recognition as sr
 import pyaudio
 import threading
-import random
+import json
 
 keyboard = Controller()
 r = sr.Recognizer()
 # Optional
 # r.energy_threshold = 1000
-
+LANGUAGE = "en-US"
 DEVICE_INDEX = 2
-STRING_TO_HOTKEY = {"control": Key.ctrl, "shift": Key.shift, "alt": Key.alt, "space": Key.space, "enter": Key.enter,
-                    "delete": Key.delete}
+STRING_TO_HOTKEY = {"control": Key.ctrl, "command": Key.cmd, "shift": Key.shift, "alt": Key.alt, "space": Key.space,
+                    "enter": Key.enter,
+                    "delete": Key.delete}.update(json.load(open("hotkeys.json")))
+
+
+def update_hotkey_dict():
+    STRING_TO_HOTKEY.update(json.load(open("hotkeys.json")))
 
 
 def press_key(key):
@@ -52,7 +57,7 @@ def query():
         audio = r.listen(source)
 
     try:
-        return r.recognize_google(audio)
+        return r.recognize_google(audio, language=LANGUAGE)
     except sr.UnknownValueError:
         return "Could not understand audio"
     except sr.RequestError:
