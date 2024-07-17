@@ -108,5 +108,8 @@ celerybeat.pid
 .idea
 venv/
 
-lip_reading/test.wav
+#data
+lip_reading/bad data/test.wav
 test.wav
+
+lip_reading/data

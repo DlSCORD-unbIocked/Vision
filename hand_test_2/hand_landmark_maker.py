@@ -43,7 +43,7 @@ while capture.isOpened():
         iteration_counter = 1
 
     if iteration_counter < n_samples_save + 1:
-        cv2.imwrite(os.path.join('data', subdir, f'{subdir}_image{iteration_counter}.jpg'), image)
+        cv2.imwrite(os.path.join('bad data', subdir, f'{subdir}_image{iteration_counter}.jpg'), image)
         if detected_image.multi_hand_landmarks:
             for hand_lms in detected_image.multi_hand_landmarks:
                 for lm in hand_lms.landmark:
@@ -65,4 +65,4 @@ y = np.array(y)
 print(X.shape)
 print(y.shape)
 
-np.savez(os.path.join('data', f'data_{subdir}.npz'), X=X, y=y)
+np.savez(os.path.join('bad data', f'data_{subdir}.npz'), X=X, y=y)

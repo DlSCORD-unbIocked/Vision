@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 import joblib
 
-# loading data
+# loading bad data
 class_names = ['hand_closed', 'hand_three', 'hand_open', 'hand_four']
 loaded_data = np.load(fr'data\data_{class_names[0]}.npz')
 X, y = loaded_data['X'], loaded_data['y']
