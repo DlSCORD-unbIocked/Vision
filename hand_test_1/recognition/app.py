@@ -170,8 +170,8 @@ def main():
                         run = False
                         print("thumbs up, closing...")
                     if hand_sign_id == 5:
-                        start_query_thread()
 
+                        start_query_thread()
 
                     else:
                         if gestures:

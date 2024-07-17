@@ -1,12 +1,18 @@
+import random
+import time
+
 import winsound
 from pynput.keyboard import Key, Controller
 import speech_recognition as sr
 import pyaudio
 import threading
+import random
 
 keyboard = Controller()
 r = sr.Recognizer()
-r.energy_threshold = 1000
+# Optional
+# r.energy_threshold = 1000
+
 DEVICE_INDEX = 2
 STRING_TO_HOTKEY = {"control": Key.ctrl, "shift": Key.shift, "alt": Key.alt, "space": Key.space, "enter": Key.enter,
                     "delete": Key.delete}
@@ -40,10 +46,10 @@ def get_devices():
 
 def query():
     with sr.Microphone(DEVICE_INDEX) as source:
+        r.adjust_for_ambient_noise(source)
         print("Say something!")
-        winsound.Beep(150, 1000)
+        winsound.Beep(200, 500)
         audio = r.listen(source)
-
 
     try:
         return r.recognize_google(audio)
@@ -55,6 +61,7 @@ def query():
 
 def process_query():
     queried_text = query()
+    print(queried_text)
     if queried_text not in ["Could not understand audio", "Could not request results"]:
         if "hotkey" in queried_text:
 
@@ -62,14 +69,23 @@ def process_query():
 
         else:
             write_line(queried_text)
+    print('completed query, closing thread')
+    return
 
 
 def start_query_thread():
-    query_thread = threading.Thread(target=process_query)
+    if threading.active_count() > 1:
+        return
+    query_thread = threading.Thread(target=process_query, daemon=True)
     query_thread.start()
+    print('started query thread')
 
 
 if __name__ == "__main__":
     text = ""
-    while "hotkey" not in text:
-        text = query()
+
+    while True:
+        print(threading.active_count())
+        if threading.active_count() == 1:
+            start_query_thread()
+        time.sleep(3)
