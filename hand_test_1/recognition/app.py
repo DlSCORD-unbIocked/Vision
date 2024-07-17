@@ -16,7 +16,7 @@ from cameras import Camera
 from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
-
+from keyboard_helper import press_key, write_line, query, press_hotkey
 
 
 def get_args():
@@ -57,11 +57,13 @@ def main():
     training = False
     log_count = 0
     mouse_down = False
+    gestures = False
     use_static_image_mode = args.use_static_image_mode
     min_detection_confidence = args.min_detection_confidence
     min_tracking_confidence = args.min_tracking_confidence
     use_brect = True
     move = True
+    hotkeys = []
     consecutive_hold_frame = 0
     # Camera preparation ###############################################################
 
@@ -167,70 +169,85 @@ def main():
                     if hand_sign_id == 9:
                         run = False
                         print("thumbs up, closing...")
+                    if hand_sign_id == 5:
+                        text = query()
+                        if text not in ["Could not understand audio", "Could not request results"]:
+                            if "hotkey" in text:
+                                text.replace("hotkey ", "")
+                                for x in text.split(" "):
+                                    hotkeys.append(x)
+                                press_hotkey(hotkeys)
+                                hotkeys = []
+                            else:
+                                write_line(text)
+
+
                     else:
+                        if gestures:
                         # Original method
-                        # get_thumb_pointer_proximity(landmark_list)
-                        # if hand_sign_id == 2:
-                        #     point_history.append(landmark_list[8])
-                        #     move_to_segment(8, landmark_list)
-                        #     if mouse_down:
-                        #         mouse_up()
-                        #         mouse_down = False
-                        # else:
-                        #     point_history.append([0, 0])
+                            get_thumb_pointer_proximity(landmark_list)
+                            if hand_sign_id == 2:
+                                point_history.append(landmark_list[8])
+                                move_to_segment(8, landmark_list)
+                                if mouse_down:
+                                    mouse_up()
+                                    mouse_down = False
+                            else:
+                                point_history.append([0, 0])
 
-                        # if hand_sign_id == 5 and not mouse_down:
+                            if hand_sign_id == 5 and not mouse_down:
 
-                        #     click()
-                        #     mouse_down = True
-                        # elif hand_sign_id == 1:
-
-                        #     if mouse_down == False:
-                        #         click()
-                        #         mouse_down = True
-
-                        #     move_to_segment(8, landmark_list)
-                        # Different implementation
-                        color = (152, 251, 152)
-                        proximity = get_thumb_pointer_proximity(landmark_list)
-                        cv.putText(
-                            debug_image,
-                            str(int(proximity)),
-                            (10, 600),
-                            cv.FONT_HERSHEY_SIMPLEX,
-                            1,
-                            (0, 0, 0),
-                            2,
-                            cv.LINE_AA,
-                        )
-                        # multiplier based on size of bounding rectangle variable brect
-
-                        if (
-                            proximity
-                            * (190 / max((brect[3] - brect[1], brect[2] - brect[0])))
-                            < threshold
-                        ):
-                            consecutive_hold_frame += 1
-                            color = (0, 0, 255)
-                            # or use click() to not drag
-
-                            if not mouse_down:
-
-                                mouse_press()
+                                click()
                                 mouse_down = True
-                                move = False
+                            elif hand_sign_id == 1:
 
-                            if consecutive_hold_frame > 30:
+                                if mouse_down == False:
+                                    click()
+                                    mouse_down = True
+
+                                move_to_segment(8, landmark_list)
+                        # Different implementation
+                        else:
+                            color = (152, 251, 152)
+                            proximity = get_thumb_pointer_proximity(landmark_list)
+                            cv.putText(
+                                debug_image,
+                                str(int(proximity)),
+                                (10, 600),
+                                cv.FONT_HERSHEY_SIMPLEX,
+                                1,
+                                (0, 0, 0),
+                                2,
+                                cv.LINE_AA,
+                            )
+                            # multiplier based on size of bounding rectangle variable brect
+
+                            if (
+                                proximity
+                                * (190 / max((brect[3] - brect[1], brect[2] - brect[0])))
+                                < threshold
+                            ):
+                                consecutive_hold_frame += 1
+                                color = (0, 0, 255)
+                                # or use click() to not drag
+
+                                if not mouse_down:
+
+                                    mouse_press()
+                                    mouse_down = True
+                                    move = False
+
+                                if consecutive_hold_frame > 30:
+                                    move = True
+
+                            elif mouse_down:
+                                consecutive_hold_frame = 0
+                                mouse_up()
+                                mouse_down = False
                                 move = True
-
-                        elif mouse_down:
-                            consecutive_hold_frame = 0
-                            mouse_up()
-                            mouse_down = False
-                            move = True
-                        if move:
-                            move_to_segment(4, landmark_list)
-                            point_history.append(landmark_list[4])
+                            if move:
+                                move_to_segment(4, landmark_list)
+                                point_history.append(landmark_list[4])
 
                 # Finger gesture classification
                 finger_gesture_id = 0
