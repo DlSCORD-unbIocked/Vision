@@ -16,7 +16,7 @@ from cameras import Camera
 from utils import CvFpsCalc
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
-from keyboard_helper import press_key, write_line, query, press_hotkey
+from keyboard_helper import press_key, write_line, query, press_hotkey, process_query, start_query_thread
 
 
 def get_args():
@@ -170,17 +170,8 @@ def main():
                         run = False
                         print("thumbs up, closing...")
                     if hand_sign_id == 5:
-                        text = query()
-                        if text not in ["Could not understand audio", "Could not request results"]:
-                            if "hotkey" in text:
-                                text.replace("hotkey ", "")
-                                for x in text.split(" "):
-                                    hotkeys.append(x)
-                                press_hotkey(hotkeys)
-                                hotkeys = []
-                            else:
-                                write_line(text)
 
+                        start_query_thread()
 
                     else:
                         if gestures:
