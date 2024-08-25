@@ -13,9 +13,9 @@
 
 ## Use:
 
-`pip install requirements.txt`
+`pip install -r requirements.txt`
 
-`python app.py` in hand_test_1/recognition for the hand gesture recognition
+`python app.py` in hand_test_1/recognition directory for the hand gesture recognition
 
 `python 3.10`
 
