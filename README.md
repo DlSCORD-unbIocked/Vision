@@ -33,3 +33,6 @@ There are currently two methods of moving the mouse. The first method is with mo
 ## Training
 
 You can train the model by running keypoint_classification.ipynb with jupyter or Google colab. in the hand_test_1/recognition folder. This will train the model and save it to the `model` folder. You can collect data by pressing k for manual snapshot or t for rapid.
+
+## Lip Reading
+![image](https://github.com/user-attachments/assets/06f75d46-a8b1-4b92-a8b2-ed47fbb47c01)
